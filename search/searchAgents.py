@@ -454,8 +454,22 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
-    "*** YOUR CODE HERE ***"
-    return 0
+    # Perhaps could do the distance to trace out the bounding box plus every additional thing that's inside. Or we could just add the farthest food.
+    
+    total_food = 0
+    i, j = position
+    min_i, max_i, min_j, max_j = i, i, j, j
+    for i, row in enumerate(foodGrid):
+        for j, is_food in enumerate(row):
+            if not is_food:
+                continue
+            total_food += 1
+            min_i = min(i, min_i)
+            max_i = max(i, max_i)
+            min_j = min(j, min_j)
+            max_j = max(j, max_j)
+            
+    return (max_i - min_i) + (max_j - min_j)
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
