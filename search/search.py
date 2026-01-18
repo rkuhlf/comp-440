@@ -86,8 +86,35 @@ def depthFirstSearch(problem: SearchProblem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+        
+    to_search = util.Stack()
+    to_search.push((problem.getStartState(), None, None))
+    prev = {}
+    
+    visited = set()
+    
+    while not to_search.isEmpty():
+        curr, p, action = to_search.pop()
+        
+        if curr in visited:
+            continue
+        visited.add(curr)
+        
+        if p is not None:
+            prev[curr] = p, action
+
+        if problem.isGoalState(curr):
+            # Iterate through prevs until get back to the startState.
+            res = []
+            while curr != problem.getStartState():
+                curr, action = prev[curr]
+                res.append(action)
+            return res[::-1]
+        
+        for succ, action, _ in problem.getSuccessors(curr):                    
+            to_search.push((succ, curr, action))
+                
+    raise Exception("Start disconnected from goal.")
 
 def breadthFirstSearch(problem: SearchProblem):
     """Search the shallowest nodes in the search tree first."""
@@ -95,7 +122,7 @@ def breadthFirstSearch(problem: SearchProblem):
     util.raiseNotDefined()
 
 def uniformCostSearch(problem: SearchProblem):
-    """Search the node of least total cost first."""
+    """Search the node of least total cost first. Also known as Dijkstra's."""
     "*** YOUR CODE HERE ***"
     util.raiseNotDefined()
 
