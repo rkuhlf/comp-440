@@ -46,8 +46,8 @@ class SearchProblem:
           state: Search state
 
         For a given state, this should return a list of triples, (successor,
-        action, stepCost), where 'successor' is a successor to the current
-        state, 'action' is the action required to get there, and 'stepCost' is
+        action, step_cost), where 'successor' is a successor to the current
+        state, 'action' is the action required to get there, and 'step_cost' is
         the incremental cost of expanding to that successor.
         """
         util.raiseNotDefined()
@@ -135,8 +135,37 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    to_search = util.PriorityQueue()
+    start = problem.getStartState()
+    
+    to_search.push((start, None, None, 0), heuristic(start, problem))
+    prev = {}
+    
+    visited = set()
+    
+    while not to_search.isEmpty():
+        curr, p, action, cost = to_search.pop()
+        
+        if curr in visited:
+            continue
+        visited.add(curr)
+        
+        if p is not None:
+            prev[curr] = p, action
+
+        if problem.isGoalState(curr):
+            # Iterate through prevs until get back to the startState.
+            res = []
+            while curr != problem.getStartState():
+                curr, action = prev[curr]
+                res.append(action)
+            return res[::-1]
+        
+        for succ, action, step_cost in problem.getSuccessors(curr):                    
+            new_cost = cost + step_cost
+            to_search.push((succ, curr, action, new_cost), new_cost + heuristic(succ, problem))
+                
+    raise Exception("Start disconnected from goal.")
 
 
 # Abbreviations
