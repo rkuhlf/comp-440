@@ -119,7 +119,28 @@ def depthFirstSearch(problem: SearchProblem):
 def breadthFirstSearch(problem: SearchProblem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    visited = set()
+    frontier = util.Queue()
+    prev = {}
+    start = problem.getStartState()
+    frontier.push((start, None, None))
+    while not frontier.isEmpty():
+        curr, parent, action = frontier.pop()
+        if curr in visited:
+            continue
+        visited.add(curr)
+        if parent is not None:
+            prev[curr] = parent, action
+        if problem.isGoalState(curr):
+            result = []
+            while curr != start:
+                curr, action = prev[curr]
+                result.append(action)
+            return result[::-1]
+        for successor, action, step_cost in problem.getSuccessors(curr):
+            if successor not in visited:
+                frontier.push((successor, curr, action))
+    raise Exception("No path to goal state found.")
 
 def uniformCostSearch(problem: SearchProblem):
     """Search the node of least total cost first. Also known as Dijkstra's."""
