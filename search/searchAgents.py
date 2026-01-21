@@ -296,14 +296,18 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return (self.startingPosition, self.corners)
+
 
     def isGoalState(self, state: Any):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if len(state[1]) == 0:
+            return True
+        return False
+        
 
     def getSuccessors(self, state: Any):
         """
@@ -326,6 +330,18 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
+            x,y = state[0]
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            if not self.walls[nextx][nexty]:
+                nextState = (nextx, nexty), state[1]
+                cost = 1            
+                if (nextx, nexty) in state[1]:
+                    new_corners = list(state[1])
+                    new_corners.remove((nextx, nexty))
+                    nextState = (nextx, nexty), tuple(new_corners)
+                successors.append( ( nextState, action, cost) )
+                    
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -361,7 +377,20 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    
+    pos = state[0]
+    remaining = state[1]          # tuple of remaining corners
+
+    if len(remaining) == 0:
+        return 0
+
+    farthest = 0
+    for c in remaining:
+        dist = util.manhattanDistance(pos, c)
+        if dist > farthest:
+            farthest = dist
+    return farthest
+        
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
