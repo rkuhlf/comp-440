@@ -454,22 +454,79 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
-    # Perhaps could do the distance to trace out the bounding box plus every additional thing that's inside. Or we could just add the farthest food.
     
-    total_food = 0
+    if "bounds" not in problem.heuristicInfo:
+        colBounds = []
+        for col in foodGrid:
+            try:
+                start = col.index(True)
+                reversed_index = col[::-1].index(True)
+                end = foodGrid.height - 1 - reversed_index
+                colBounds.append((start, end))
+            except ValueError:
+                colBounds.append(None)
+                
+        rowBounds = []
+
+        for j in range(foodGrid.height):
+            row = [foodGrid[i][j] for i in range(foodGrid.width)]
+            try:
+                start = row.index(True)
+                end = foodGrid.width - 1 - row[::-1].index(True)
+                rowBounds.append((start, end))
+            except ValueError:
+                rowBounds.append(None)
+
+        problem.heuristicInfo["bounds"] = (colBounds, rowBounds)
+    
+    colBounds, rowBounds = problem.heuristicInfo["bounds"]
+
     i, j = position
     min_i, max_i, min_j, max_j = i, i, j, j
     for i, row in enumerate(foodGrid):
-        for j, is_food in enumerate(row):
-            if not is_food:
-                continue
-            total_food += 1
-            min_i = min(i, min_i)
-            max_i = max(i, max_i)
-            min_j = min(j, min_j)
-            max_j = max(j, max_j)
-            
-    return (max_i - min_i) + (max_j - min_j)
+        if colBounds[i] is None:
+            continue
+        start, end = colBounds[i]
+        
+        if any(row[start:end]):
+            min_i = min(min_i, i)
+            break
+    for i in range(foodGrid.width - 1, -1, -1):
+        if colBounds[i] is None:
+            continue
+        start, end = colBounds[i]
+        
+        if any(foodGrid[i]):
+            max_i = max(max_i, i)
+            break    
+
+    for j in range(foodGrid.height):
+        if rowBounds[j] is None:
+            continue
+        start, end = rowBounds[j]
+        
+        for i in range(start, end + 1):
+            if foodGrid[i][j]:
+                min_j = min(min_j, j)
+                break
+        else:
+            continue
+        break
+        
+    for j in range(foodGrid.height - 1, -1, -1):
+        if rowBounds[j] is None:
+            continue
+        start, end = rowBounds[j]
+        
+        for i in range(start, end + 1):
+            if foodGrid[i][j]:
+                max_j = max(max_j, j)
+                break
+        else:
+            continue
+        break
+
+    return max(((max_i - min_i) + (max_j - min_j)), + len(foodGrid.asList()))
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -489,18 +546,8 @@ class ClosestDotSearchAgent(SearchAgent):
         print('Path found with cost %d.' % len(self.actions))
 
     def findPathToClosestDot(self, gameState: pacman.GameState):
-        """
-        Returns a path (a list of actions) to the closest dot, starting from
-        gameState.
-        """
-        # Here are some useful elements of the startState
-        startPosition = gameState.getPacmanPosition()
-        food = gameState.getFood()
-        walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
-
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return search.aStarSearch(problem)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -535,8 +582,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         """
         x,y = state
 
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.food[x][y]
 
 def mazeDistance(point1: Tuple[int, int], point2: Tuple[int, int], gameState: pacman.GameState) -> int:
     """
