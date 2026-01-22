@@ -179,24 +179,18 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    to_search = util.PriorityQueue()
+    frontier = util.PriorityQueue()
     start = problem.getStartState()
     
-    to_search.push((start, None, None, 0), heuristic(start, problem))
+    costs = {}
+    costs[start] = heuristic(start, problem)
+    frontier.push(start, costs[start])
+
     prev = {}
     
-    visited = set()
-    
-    while not to_search.isEmpty():
-        curr, p, action, cost = to_search.pop()
+    while not frontier.isEmpty():
+        curr = frontier.pop()
         
-        if curr in visited:
-            continue
-        visited.add(curr)
-        
-        if p is not None:
-            prev[curr] = p, action
-
         if problem.isGoalState(curr):
             # Iterate through prevs until get back to the startState.
             res = []
@@ -205,9 +199,12 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
                 res.append(action)
             return res[::-1]
         
-        for succ, action, step_cost in problem.getSuccessors(curr):                    
-            new_cost = cost + step_cost
-            to_search.push((succ, curr, action, new_cost), new_cost + heuristic(succ, problem))
+        for succ, action, step_cost in problem.getSuccessors(curr):
+            new_cost = costs[curr] + step_cost + heuristic(succ, problem) - heuristic(curr, problem)
+            if succ not in costs or costs[succ] > new_cost:
+                costs[succ] = new_cost
+                frontier.push(succ, costs[succ])
+                prev[succ] = curr, action 
                 
     raise Exception("Start disconnected from goal.")
 
