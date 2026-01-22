@@ -555,7 +555,7 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
             continue
         break
 
-    return max(((max_i - min_i) + (max_j - min_j)), + len(foodGrid.asList()))
+    return max(((max_i - min_i) + (max_j - min_j)), len(foodGrid.asList()))
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
