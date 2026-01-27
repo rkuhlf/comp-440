@@ -11,3 +11,38 @@ Mutation frequency could vary gene-to-gene.
 Mutation frequency could decrease over time.
 
 W is turns when facing barrier.
+
+
+Okay, gonna start by trying the most basic hill-climbing approach:
+1. Mutate one gene to a random number.
+2. If it beats the previous one, take it.
+
+Gotta activate the virtual environment so numpy doesn't get destroyed.
+venv\Scripts\activate
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+Had to set my venv interpreter manually and then it started working on open.
+
+There's a ton of rock-paper-scissors aspect. If you just hill-climb against the current one you aren't going to get very far bc you need to be good against a variety.
+
+It looks like hill-climbing with only mutating one gene at a time can actually get you pretty far. I'm getting consistent improvement through 1100 iterations.
+I think the next step is probably to speed up the evaluation. Do we really need to beat all of the previous winners? Probably more like we only need to beat every fifth one. idk. I guess I would've expected we'd hit a local minima by now.
+
+Maybe every other time I add a winner I remove one of the previous ones. That way the function isn't so bad. Then the winners list will grow half as fast. Okay that's not really what I want either, I want it to top out at like 100 winners. It should be #winners/100 is the probability of removing a random winner.
+
+
+At least tie all previous winners requirement:
+11111012000111113010101111111232011222013021111011
+11111212000111113010101111111232011222013021111011
+11111212000111113010101111111232011222013021111011
+11111212000111113010101111111232011212013021111011
+11111212000111113010101111111232011212013021111011
+
+Beat all previous winners requirement:
+10110030101122123111121111111122121111131131111221
+
+Different run:
+03100100000102003313311121122112221111123131011130
+03100100000102003313311121122112221111123131013130
+03100100000102003313311121122112221111123131013131
+03100000000102003313311121122112221111123131013131
+03100000000102003313311121122112221111123131023131
