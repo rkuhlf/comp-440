@@ -4,11 +4,13 @@ import numpy
 
 gene = 1 | 2 | 3 | 4
 
-def mutate(sequence: list[gene]) -> list[gene]:
+def mutate(sequence: list[gene], n: int = 1) -> list[gene]:
     sequence = sequence.copy()
-    new_gene = random.randint(0, 3)
-    position = random.randint(0, len(sequence) - 1)
-    sequence[position] = new_gene
+    new_genes = [random.randint(0, 3) for _ in range(n)]
+    positions = random.sample(range(len(sequence)), n)
+    for position, gene in zip(positions, new_genes):
+        sequence[position] = gene
+    
     return sequence
 
 def seq_to_str(sequence: list[gene]) -> str:
@@ -33,11 +35,12 @@ def main():
         while True:
             i += 1
             if i % print_every == 0:
-                print(f"Iteration {i}, {wins/print_every=:.2f}")
+                print(f"Iteration {i}, {wins}/{print_every}")
                 print(seq_to_str(curr))
                 wins = 0
 
-            neighbor = mutate(curr)
+            mut_count = 1 + int(numpy.random.exponential(3, size=1)[0])
+            neighbor = mutate(curr, n=mut_count)
             won_all = True
             for winner in winners:
                 (rounds, c1, c2) = _PyPacwar.battle(winner, neighbor)
