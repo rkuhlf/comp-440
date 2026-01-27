@@ -1,0 +1,13 @@
+U gene: 11110000000000000000000000000000000000000000000000
+W gene: 00000000000000000000111000000000000000000000000000
+X gene: 00000000000000000000000111000000000000000000000000
+
+
+Could try varying optimizing only a certain gene at a time.
+
+Could try swapping between species at the gene level.
+
+Mutation frequency could vary gene-to-gene.
+Mutation frequency could decrease over time.
+
+W is turns when facing barrier.
