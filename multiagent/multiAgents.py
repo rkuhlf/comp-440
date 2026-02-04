@@ -215,8 +215,41 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        maxScore = float('-inf')
+        bestAction = None
+        for action in gameState.getLegalActions(0):
+            successor = gameState.generateSuccessor(0, action)
+            score = self.expectimax_score(successor, 1, 0)
+            if score > maxScore:
+                maxScore = score
+                bestAction = action
+        return bestAction
+    def expectimax_score(self, gameState: GameState, idx, depth)-> float:
+        #base case 
+        if gameState.isWin() or gameState.isLose() or (depth == self.depth and idx == 0):
+            return self.evaluationFunction(gameState)
+        
+        idx = idx % gameState.getNumAgents()
+        legalActions = gameState.getLegalActions(idx)
+        
+        if idx == 0: # Pacman's turn (maximizing player)
+            maxScore = float('-inf')
+            for action in legalActions:
+                successor = gameState.generateSuccessor(idx, action)
+                score = self.expectimax_score(successor, idx + 1, depth)
+                maxScore = max(maxScore, score)
+            return maxScore
+        
+        else:
+            p = 1 / len(legalActions)
+            expectedScore = 0
+            for action in legalActions:
+                successor = gameState.generateSuccessor(idx, action)
+                nextIdx = (idx + 1) % gameState.getNumAgents()
+                score = self.expectimax_score(successor, nextIdx, depth + (1 if nextIdx == 0 else 0))
+                expectedScore += p * score
+            return expectedScore
+   
 def betterEvaluationFunction(currentGameState: GameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
@@ -225,7 +258,30 @@ def betterEvaluationFunction(currentGameState: GameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+ 
+    
+    pacPos = currentGameState.getPacmanPosition()
+    foodPosLst = currentGameState.getFood().asList()
+    ghostPositions = currentGameState.getGhostPositions()
+    
+    if currentGameState.isWin():
+        return float('inf')
+    if currentGameState.isLose():
+        return float('-inf')
+    
+    score = currentGameState.getScore()
+    
+    
+    if foodPosLst:
+        minFoodDist = min(manhattanDistance(pacPos, foodPos) for foodPos in foodPosLst)
+        score += 10 / (minFoodDist + 1)
+    if ghostPositions:
+        distToGhosts = [manhattanDistance(pacPos, ghostPos) for ghostPos in ghostPositions]
+        if min(distToGhosts) <= 1:
+                score -= 50
+        else:
+            score -= 6 / (min(distToGhosts) + 1)
+    return score
 
 # Abbreviation
 better = betterEvaluationFunction
