@@ -13,10 +13,9 @@
 
 
 from util import manhattanDistance
-from game import Directions
-import random, util
+import random, util, math
 
-from game import Agent
+from game import Agent, Actions
 from pacman import GameState
 
 class ReflexAgent(Agent):
@@ -71,7 +70,6 @@ class ReflexAgent(Agent):
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
         
-        
         foods = newFood.asList()
         if foods:
             food_proximity = 1 / min(manhattanDistance(newPos, food) for food in newFood.asList())
@@ -124,31 +122,73 @@ class MinimaxAgent(MultiAgentSearchAgent):
     Your minimax agent (question 2)
     """
 
-    def getAction(self, gameState: GameState):
+    def getAction(self, initState: GameState):
         """
-        Returns the minimax action from the current gameState using self.depth
+        Returns the minimax action from the current initState using self.depth
         and self.evaluationFunction.
 
         Here are some method calls that might be useful when implementing minimax.
 
-        gameState.getLegalActions(agentIndex):
+        initState.getLegalActions(agentIndex):
         Returns a list of legal actions for an agent
         agentIndex=0 means Pacman, ghosts are >= 1
 
-        gameState.generateSuccessor(agentIndex, action):
+        initState.generateSuccessor(agentIndex, action):
         Returns the successor game state after an agent takes an action
 
-        gameState.getNumAgents():
+        initState.getNumAgents():
         Returns the total number of agents in the game
 
-        gameState.isWin():
+        initState.isWin():
         Returns whether or not the game state is a winning state
 
-        gameState.isLose():
+        initState.isLose():
         Returns whether or not the game state is a losing state
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        def min_action(state: GameState, depth: int, agent_index: int=1):
+            if state.isWin() or state.isLose() or depth == 0:
+                return self.evaluationFunction(state)
+            
+            min_score = math.inf
+            for action in state.getLegalActions(agent_index):
+                nextState = state.generateSuccessor(agent_index, action)
+                
+                # If this is the last min agent, then the pacman gets to go next.
+                if agent_index == state.getNumAgents() - 1:
+                    _action, score = max_action(nextState, depth - 1)
+                else:
+                    score = min_action(nextState, depth, agent_index=agent_index + 1)
+    
+                if score < min_score:
+                    min_score = score
+                    
+            return min_score
+            
+        
+        def max_action(state: GameState, depth: int):
+            # V_opt = max of every action the pacman could do.
+            # What does the pacman wantto have happen.
+
+            if state.isWin() or state.isLose() or depth == 0:
+                return None, self.evaluationFunction(state)
+            
+            max_score = -math.inf
+            best_action = None
+            for action in state.getLegalActions(0):
+                nextState = state.generateSuccessor(0, action)
+                
+                score = min_action(nextState, depth)
+                # This returned 0, which is unexpected it should have returned 9 for west.
+                if score > max_score:
+                    max_score = score
+                    best_action = action
+                    
+            return best_action, max_score
+            
+        action, _score = max_action(initState, self.depth)
+        return action
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
