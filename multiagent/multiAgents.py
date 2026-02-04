@@ -172,7 +172,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                 maxScore = score
                 bestAction = action
         return bestAction
-    def expectimax_score(self, gameState: GameState, idx, depth):
+    def expectimax_score(self, gameState: GameState, idx, depth)-> float:
         #base case 
         if gameState.isWin() or gameState.isLose() or (depth == self.depth and idx == 0):
             return self.evaluationFunction(gameState)
@@ -206,7 +206,30 @@ def betterEvaluationFunction(currentGameState: GameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+ 
+    
+    pacPos = currentGameState.getPacmanPosition()
+    foodPosLst = currentGameState.getFood().asList()
+    ghostPositions = currentGameState.getGhostPositions()
+    
+    if currentGameState.isWin():
+        return float('inf')
+    if currentGameState.isLose():
+        return float('-inf')
+    
+    score = currentGameState.getScore()
+    
+    
+    if foodPosLst:
+        minFoodDist = min(manhattanDistance(pacPos, foodPos) for foodPos in foodPosLst)
+        score += 10 / (minFoodDist + 1)
+    if ghostPositions:
+        distToGhosts = [manhattanDistance(pacPos, ghostPos) for ghostPos in ghostPositions]
+        if min(distToGhosts) <= 1:
+                score -= 50
+        else:
+            score -= 6 / (min(distToGhosts) + 1)
+    return score
 
 # Abbreviation
 better = betterEvaluationFunction
