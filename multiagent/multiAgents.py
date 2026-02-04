@@ -163,8 +163,41 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        maxScore = float('-inf')
+        bestAction = None
+        for action in gameState.getLegalActions(0):
+            successor = gameState.generateSuccessor(0, action)
+            score = self.expectimax_score(successor, 1, 0)
+            if score > maxScore:
+                maxScore = score
+                bestAction = action
+        return bestAction
+    def expectimax_score(self, gameState: GameState, idx, depth):
+        #base case 
+        if gameState.isWin() or gameState.isLose() or (depth == self.depth and idx == 0):
+            return self.evaluationFunction(gameState)
+        
+        idx = idx % gameState.getNumAgents()
+        legalActions = gameState.getLegalActions(idx)
+        
+        if idx == 0: # Pacman's turn (maximizing player)
+            maxScore = float('-inf')
+            for action in legalActions:
+                successor = gameState.generateSuccessor(idx, action)
+                score = self.expectimax_score(successor, idx + 1, depth)
+                maxScore = max(maxScore, score)
+            return maxScore
+        
+        else:
+            p = 1 / len(legalActions)
+            expectedScore = 0
+            for action in legalActions:
+                successor = gameState.generateSuccessor(idx, action)
+                nextIdx = (idx + 1) % gameState.getNumAgents()
+                score = self.expectimax_score(successor, nextIdx, depth + (1 if nextIdx == 0 else 0))
+                expectedScore += p * score
+            return expectedScore
+   
 def betterEvaluationFunction(currentGameState: GameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
