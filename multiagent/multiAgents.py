@@ -195,12 +195,65 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     Your minimax agent with alpha-beta pruning (question 3)
     """
 
-    def getAction(self, gameState: GameState):
+    def getAction(self, initState: GameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        def min_action(state: GameState, depth: int, alpha: float, beta: float, agent_index: int=1):
+            if state.isWin() or state.isLose() or depth == 0:
+                return self.evaluationFunction(state)
+            
+            min_score = math.inf
+            for action in state.getLegalActions(agent_index):
+                nextState = state.generateSuccessor(agent_index, action)
+                
+                # If this is the last min agent, then the pacman gets to go next.
+                if agent_index == state.getNumAgents() - 1:
+                    _action, score = max_action(nextState, depth - 1, alpha, beta)
+                else:
+                    score = min_action(nextState, depth, alpha, beta, agent_index=agent_index + 1)
+    
+                if score < min_score:
+                    min_score = score
+                
+                beta = min(beta, score)
+                
+                # If the parent of this node is the maximizing pacman node, then we know it will always pick alpha as soon as the min_score is too low.
+                if  min_score < alpha:
+                    return min_score
+                    
+            return min_score
+            
+        
+        def max_action(state: GameState, depth: int, alpha: float, beta: float):
+            # V_opt = max of every action the pacman could do.
+            # What does the pacman wantto have happen.
+
+            if state.isWin() or state.isLose() or depth == 0:
+                return None, self.evaluationFunction(state)
+            
+            max_score = -math.inf
+            best_action = None
+            for action in state.getLegalActions(0):
+                nextState = state.generateSuccessor(0, action)
+                
+                score = min_action(nextState, depth, alpha, beta)
+                
+                if score > max_score:
+                    max_score = score
+                    best_action = action
+                    
+                alpha = max(alpha, score)
+                
+                # If this score is more than the ghost would ever allow us to get, just stop computing.
+                if max_score > beta:
+                    return best_action, max_score
+                    
+            return best_action, max_score
+            
+        action, _score = max_action(initState, self.depth, alpha=-math.inf, beta=math.inf)
+        return action
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
