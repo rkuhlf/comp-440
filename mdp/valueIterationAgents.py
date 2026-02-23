@@ -25,11 +25,12 @@
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
+import collections, math
+import heapq
 
 import mdp, util
 
 from learningAgents import ValueEstimationAgent
-import collections
 
 class ValueIterationAgent(ValueEstimationAgent):
     """
@@ -81,8 +82,6 @@ class ValueIterationAgent(ValueEstimationAgent):
                                 curr_max = q_value
                         curr_V[state] = curr_max
             self.values = curr_V
-                        
-                        
 
 
     def getValue(self, state):
@@ -155,5 +154,45 @@ class PrioritizedSweepingValueIterationAgent(ValueIterationAgent):
         ValueIterationAgent.__init__(self, mdp, discount, iterations)
 
     def runValueIteration(self):
-        "*** YOUR CODE HERE ***"
+        # Compute predecessors.
+        pred = collections.defaultdict(set)
+        for state in self.mdp.getStates():
+            for action in self.mdp.getPossibleActions(state):
+                for neighbor, prob in self.mdp.getTransitionStatesAndProbs(state, action):
+                    if prob <= 0:
+                        continue
+                    pred[neighbor].add(state)
+        
+        heap = util.PriorityQueue()
+        pendingDiff = util.Counter()
+        for state in self.mdp.getStates():
+            if self.mdp.isTerminal(state):
+                continue
+            diff = self.getUpdateDiff(state)
+            heap.push(state, -abs(diff))
+            pendingDiff[state] = diff
+            
+        for _ in range(self.iterations):
+            if heap.isEmpty():
+                return
 
+            s = heap.pop()
+            self.values[s] += pendingDiff[s]
+            # print(self.values[s], pendingDiff[s])
+            del pendingDiff[s]
+            
+            for p in pred[s]:
+                diff = self.getUpdateDiff(p)
+                if abs(diff) < self.theta:
+                    continue
+            
+                heap.update(p, -abs(diff))
+                if abs(pendingDiff[p]) < abs(diff):
+                    pendingDiff[p] = diff
+                
+    def getUpdateDiff(self, state):
+        highest_v = -math.inf
+        for action in self.mdp.getPossibleActions(state):
+            highest_v = max(self.computeQValueFromValues(state, action), highest_v)
+        
+        return highest_v - self.values[state]
