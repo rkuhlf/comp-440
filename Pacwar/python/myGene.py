@@ -53,6 +53,11 @@ def duel_points(rounds: int, c_me: int, c_opp: int) -> int:
     return 10
 
 
+def strong_parent(population: list[list[int]], scores: list[float], k: int) -> list[int]:
+    possible_parents = random.sample(range(len(population)), k)
+    best_idx = possible_parents[np.argmax([scores[i] for i in possible_parents])]
+    return population[best_idx]
+
 def score_once(me: list[int], opp: list[int]) -> float:
     rounds, c_me, c_opp = _PyPacwar.battle(me, opp)
     pts = duel_points(rounds, c_me, c_opp)
@@ -63,69 +68,72 @@ def score_once(me: list[int], opp: list[int]) -> float:
 def evaluate(me: list[int], opponents: list[list[int]]) -> float:
     return float(np.mean([score_once(me, o) for o in opponents]))
 
+def crossover(p1: list[int], p2: list[int]):
+    split_idx= random.randint(1, GENE_LEN - 1)
+    return p1[:split_idx] + p2[split_idx:]
 
-def mutate_gene(g: list[int]) -> list[int]:
-    i = random.randrange(GENE_LEN)
-    cur = g[i]
-    new_val = random.choice([a for a in ALLELES if a != cur])
-    ng = g.copy()
-    ng[i] = new_val
-    return ng
+def mutate(gene: list[int], mutation_rate: float):
+    for i in range(len(gene)):
+        if random.random() < mutation_rate:
+            gene[i] = random.choice([a for a in ALLELES if a != gene[i]])
+
+baseline_opponents = [
+    [0] * 50,
+    [1] * 50,
+    [2] * 50,
+    [3] * 50,
+]
+def genetic_algorithm(n: int, generations: int, opponents: list[list[int]],
+                      mutation_rate = 0.1, survival_rate = 0.05, selection_k = 5, initial_k = 5):
+    population = [random_gene() for _ in range(n)]
+    result_gene = None
+    result_score = float('-inf')
+    
+    for gen in range(generations):
+        scores = []
+        for gen_code in population:
+            curr_opponents = random.sample(population, initial_k) + baseline_opponents
+            scores.append(evaluate(gen_code, curr_opponents))
+            
+        best_gene = population[np.argmax(scores)]  
+        best_score = max(scores)
+        if best_score > result_score:
+            result_score = best_score
+            result_gene = best_gene.copy()
+            
+        new_population = []
+        num_survivors = max(1, int(n * survival_rate))
+        top_indices = np.argsort(scores)[::-1][:num_survivors]
+        # Fill new population with survivors
+        for i in top_indices:
+            new_population.append(population[i].copy())
+        
+        while len(new_population) < n:
+            p1 = strong_parent(population, scores, selection_k)
+            p2 = strong_parent(population, scores, selection_k)
+            
+            child = crossover(p1, p2)
+            mutate(child, mutation_rate)
+            new_population.append(child)
+            
+        population = new_population
+        
+    return result_gene, result_score
 
 
-def hill_climb(me0: list[int], opponents: list[list[int]], steps: int = 200, samples_per_step: int = 200):
-    me = me0.copy()
-    best = evaluate(me, opponents)
+if __name__ == "__main__":
 
-    for _ in range(steps):
-        improved = False
-        best_neighbor = me
-        best_neighbor_val = best
-
-        for _ in range(samples_per_step):
-            cand = mutate_gene(me)
-            v = evaluate(cand, opponents)
-            if v > best_neighbor_val:
-                best_neighbor = cand
-                best_neighbor_val = v
-                improved = True
-
-        if not improved:
-            break
-
-        me = best_neighbor
-        best = best_neighbor_val
-
-    return me, best
-
-
-def random_restarts_hc(
-    restarts: int = 40,
-    steps: int = 150,
-    samples_per_step: int = 250,
-    seed: int | None = 0,
-):
-    if seed is not None:
-        random.seed(seed)
-        np.random.seed(seed)
-
-    opponents = [
-        [0] * 50,
-        [1] * 50,
-        [2] * 50,
-        [3] * 50,
-        ([0, 1, 2, 3] * 12) + [0, 1],
-    ]
-    opponents += [random_gene() for _ in range(10)]
-
-    global_best = None
-    global_best_val = float("-inf")
-
-    for r in range(restarts):
-        start = random_gene()
-        g, v = hill_climb(start, opponents, steps=steps, samples_per_step=samples_per_step)
-        if v > global_best_val:
-            global_best = g
-            global_best_val = v
-
-    return global_best, global_best_val
+    best_gene, best_score = genetic_algorithm(
+        n=100, 
+        generations=50, 
+        opponents=[],
+        mutation_rate=0.1, 
+        survival_rate=0.05, 
+        selection_k=5, 
+        initial_k=5
+    )
+    
+    print("\n=== EVOLUTION COMPLETE ===")
+    print(f"Top Score: {best_score:.2f}")
+    print(f"Winning Gene Sequence to copy-paste into simulator:\n{best_gene}")
+            
