@@ -215,3 +215,15 @@ ResultWinners:
 01330033310011023230311122211223233101003122021031
 30033231013102321033031323221221331012313122100010
 03100000001020200333311121121111212122131121020130
+
+
+
+Ideas:
+1. Two-point crossover.
+2. Multiple populations
+3. Run the code for like 8 hours.
+4. Try cranking up the population size a bunch.
+5. Try including some information about where the gene meaning changes.
+
+Best gene seems to be:
+03100000030000003330311121121121322122131131101130

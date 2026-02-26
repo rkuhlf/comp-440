@@ -60,7 +60,14 @@ def iterate_single(*, max_winners: int, stop_probability: float, mutation_count:
 
 def iterate_known_winners(*, initial_gene: sequence, stop_probability: float, mutation_count: Callable[[], float]) -> sequence:
     curr = initial_gene
-    winners = [ones.copy(), threes]
+    winners = strs_to_seqs([
+        [1] * 50,
+        [3] * 50,
+        "01300000110122003333133323323322322333310113213310",
+        "01330033310011023230311122211223233101003122021031",
+        "30033231013102321033031323221221331012313122100010",
+        "03100000001020200333311121121111212122131121020130",
+    ])
     # c2 is me.
     record_c2 = 0
     # c1 is other.
@@ -157,7 +164,7 @@ def main():
         for _ in range(30):
             mutation_size = random.randint(2, 8)
             iters, winners = iterate_known_winners(
-                initial_gene=str_to_seq("01001000111022223303212212212232232232310011221333"),
+                initial_gene=str_to_seq("03100000001020200333311121121111212122131121020130"),
                 stop_probability=0.01,
                 mutation_count=lambda : min(30, 1 + int(numpy.random.exponential(mutation_size, size=1)[0]))
             )

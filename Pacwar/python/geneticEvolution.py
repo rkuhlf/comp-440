@@ -156,15 +156,15 @@ if __name__ == "__main__":
     result_winners = []
     best_winners = []
     try:
-        while len(result_winners) < 20:
+        while len(result_winners) < 1:
             best_gene, result_gene = genetic_algorithm(
                 population=random_population(500),
                 should_halt=should_halt,
                 opponents=[],
                 mutation_rate=0.01,
                 survival_rate=0.05, 
-                selection_k=5, 
-                initial_k=5
+                selection_k=10,
+                initial_k=4
             )
             best_winners.append(best_gene)
             result_winners.append(result_gene)
